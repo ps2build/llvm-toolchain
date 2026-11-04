@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-native-linux:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PS2DEV: ${{ github.workspace }}/../ps2dev-native
+      BUILD_ROOT: ${{ github.workspace }}/../ps2dev-build
+      LLVM_HOST_COMPILER: clang
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang cmake ninja-build python3 texinfo zip
+      - name: Build toolchain
+        run: bash build.sh
+      - name: Sanity check
+        run: bash scripts/sanity-check.sh "$PS2DEV"

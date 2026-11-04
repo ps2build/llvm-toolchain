@@ -1,0 +1,13 @@
+--target=mips64el-unknown-elf
+-mcpu=r5900
+-mabi=n32
+-fno-pic
+-G0
+-fno-math-errno
+-femulated-tls
+-D_EE
+-D__ps2sdk__
+-D_GNU_SOURCE
+--sysroot=<CFGDIR>/../@PREFIX@
+-isystem <CFGDIR>/../@PREFIX@/include/c++/v1
+-isystem <CFGDIR>/../@PREFIX@/include

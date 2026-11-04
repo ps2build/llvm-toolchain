@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build-native-linux:
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PS2DEV: ${{ github.workspace }}/../ps2dev-native
+      BUILD_ROOT: ${{ github.workspace }}/../ps2dev-build
+      LLVM_HOST_COMPILER: clang
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang cmake ninja-build python3 texinfo zip
+      - name: Build toolchain
+        run: bash build.sh
+      - name: Sanity check
+        run: bash scripts/sanity-check.sh "$PS2DEV"
+      - name: Bundle licenses
+        run: |
+          scripts/bundle-licenses.sh "$BUILD_ROOT" "$PS2DEV"
+          cp LICENSE "$PS2DEV/LICENSE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-toolchain
+          path: ${{ env.PS2DEV }}
+          retention-days: 1
+
+  package-linux:
+    if: false
+    needs: build-native-linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-linux-toolchain
+          path: ${{ runner.temp }}/ps2dev
+      - name: Restore executable permissions
+        run: scripts/restore-exec-bits.sh "${{ runner.temp }}/ps2dev"
+      - name: Package
+        run: |
+          name="ps2-llvm-toolchain-${GITHUB_REF_NAME#v}-linux-amd64"
+          mkdir -p "${{ runner.temp }}/staging/llvm-toolchain"
+          mv "${{ runner.temp }}"/ps2dev/* "${{ runner.temp }}/staging/llvm-toolchain/"
+          (cd "${{ runner.temp }}/staging" && zip -rqy "$GITHUB_WORKSPACE/$name.zip" llvm-toolchain)
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ps2-llvm-toolchain-*-linux-amd64.zip
+
+  build-windows-cross:
+    if: false
+    needs: build-native-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PS2DEV: ${{ github.workspace }}/../ps2dev-win
+      BUILD_ROOT: ${{ github.workspace }}/../ps2dev-build-win
+      NATIVE: ${{ github.workspace }}/../ps2dev-native
+      PS2_CROSS_HOST: x86_64-w64-mingw32
+      LLVM_HOST_COMPILER: clang
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang cmake ninja-build python3 texinfo zip \
+            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 mingw-w64-tools
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-linux-toolchain
+          path: ${{ env.NATIVE }}
+      - name: Restore executable permissions
+        run: scripts/restore-exec-bits.sh "$NATIVE"
+      - name: Build Windows-hosted compiler and wrappers
+        run: |
+          mkdir -p "$PS2DEV/ee" "$PS2DEV/iop"
+          cp -r "$NATIVE/ee/mips64r5900el-ps2-elf" "$PS2DEV/ee/"
+          cp -r "$NATIVE/iop/mipsel-none-elf" "$PS2DEV/iop/"
+          bash build.sh 1 2
+      - name: Check the Windows binaries
+        run: |
+          for f in clang ld.lld; do
+            x86_64-w64-mingw32-objdump -f "$PS2DEV/llvm/bin/$f.exe" | grep -q "file format pei-x86-64"
+          done
+      - name: Bundle licenses
+        run: |
+          scripts/bundle-licenses.sh "$BUILD_ROOT" "$PS2DEV" windows
+          cp LICENSE "$PS2DEV/LICENSE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-cross-toolchain
+          path: ${{ env.PS2DEV }}
+          retention-days: 1
+
+  package-windows:
+    if: false
+    needs: build-windows-cross
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-cross-toolchain
+          path: ${{ runner.temp }}/staging/llvm-toolchain
+      - name: Package
+        run: |
+          name="ps2-llvm-toolchain-${GITHUB_REF_NAME#v}-windows-amd64"
+          (cd "${{ runner.temp }}/staging" && zip -rq "$GITHUB_WORKSPACE/$name.zip" llvm-toolchain)
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ps2-llvm-toolchain-*-windows-amd64.zip

@@ -1,0 +1,9 @@
+--target=mipsel-unknown-elf
+-mcpu=r3000a
+-mabi=32
+-msoft-float
+-mno-abicalls
+-ffreestanding
+--sysroot=<CFGDIR>/../@PREFIX@
+-mllvm
+-mips-split-hi16
