@@ -64,6 +64,18 @@ LLVM_SRC_DIR=/path/to/llvm NEWLIB_SRC_DIR=/path/to/newlib-llvm docker/run-local.
 
 Sources and build trees live in a Docker volume; the install is bind-mounted to `<out-dir>`. The container is limited to 12 GB of memory and `LLVM_COMPILE_JOBS` (default 6) parallel compiles.
 
+## Releases
+
+Each script builds one platform from a release tag (checked out into a temporary worktree) and writes the zip to `build/release/`. `--publish` creates the tag's GitHub release if needed and uploads the zip to it.
+
+| Script | Output | Requires |
+|---|---|---|
+| `scripts/release-linux.sh <tag>` | `ps2-llvm-toolchain-<version>-linux-amd64.zip` | Docker |
+| `scripts/release-windows.sh <tag>` | `ps2-llvm-toolchain-<version>-windows-amd64.zip` | Docker |
+| `scripts/release-macos.sh <tag>` | `ps2-llvm-toolchain-<version>-darwin-arm64.zip` | macOS with `brew install cmake ninja python zip` |
+
+The Linux and Windows scripts build in a `linux/amd64` container; the Windows script builds the Linux toolchain first and reuses its target libraries. On Apple silicon the container runs under emulation, which makes the LLVM build very slow. `LLVM_COMPILE_JOBS` and `LLVM_LINK_JOBS` limit parallelism.
+
 ## Workflows
 
 Build and release workflows are in `.github/workflows` and are currently disabled; releases are built in house.
