@@ -58,11 +58,11 @@ Point `CC` at `ee/bin/mips64r5900el-ps2-elf-clang` or `iop/bin/mipsel-none-elf-c
 ## Local Linux build in Docker
 
 ```sh
-docker build -f docker/build-env.Dockerfile -t llvmtc-env .
+docker build --platform linux/amd64 -f docker/build-env.Dockerfile -t llvmtc-env .
 LLVM_SRC_DIR=/path/to/llvm NEWLIB_SRC_DIR=/path/to/newlib-llvm docker/run-local.sh <out-dir> [steps]
 ```
 
-Sources and build trees live in a Docker volume; the install is bind-mounted to `<out-dir>`. The container is limited to 12 GB of memory and `LLVM_COMPILE_JOBS` (default 6) parallel compiles.
+Sources and build trees live in a Docker volume; the install is bind-mounted to `<out-dir>`. The container is limited to 12 GB of memory and `LLVM_COMPILE_JOBS` (default 6) parallel compiles. `--platform linux/amd64` is required when building the image on Apple silicon (matches the release scripts); `run-local.sh` already runs the container with it.
 
 ## Releases
 

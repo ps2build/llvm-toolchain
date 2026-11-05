@@ -1,12 +1,13 @@
 #!/bin/bash
-# Runs the toolchain build in the llvmtc-env image (docker build -f docker/build-env.Dockerfile -t llvmtc-env .).
+# Runs the toolchain build in the llvmtc-env image (docker build --platform linux/amd64 -f docker/build-env.Dockerfile -t llvmtc-env .).
 # Sources and build trees live in the llvmtc-work volume; the install is bind-mounted to <out-dir>.
 # Needs LLVM_SRC_DIR and NEWLIB_SRC_DIR pointing at local clones.
+# On Apple silicon, the image must be built and run with --platform linux/amd64 (matches the release scripts); omitting it builds an arm64 image that can silently diverge from the released toolchain.
 # Usage: run-local.sh <out-dir> [build.sh args...]
 set -e
 OUT="$1"; shift
 HERE="$(cd "$(dirname "$0")/.." && pwd -W 2>/dev/null || pwd)"
-docker run --rm --memory=12g --memory-swap=12g \
+docker run --rm --platform linux/amd64 --memory=12g --memory-swap=12g \
   -v llvmtc-work:/work \
   -v "$OUT:/opt/ps2dev-build" \
   -v "$HERE:/mnt/tc:ro" \
