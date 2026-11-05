@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      PS2DEV: ${{ github.workspace }}/../ps2dev-native
-      BUILD_ROOT: ${{ github.workspace }}/../ps2dev-build
+      PS2DEV: /home/runner/ps2dev-native
+      BUILD_ROOT: /home/runner/ps2dev-build
       LLVM_HOST_COMPILER: clang
     steps:
       - uses: actions/checkout@v4
@@ -66,9 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      PS2DEV: ${{ github.workspace }}/../ps2dev-win
-      BUILD_ROOT: ${{ github.workspace }}/../ps2dev-build-win
-      NATIVE: ${{ github.workspace }}/../ps2dev-native
+      PS2DEV: /home/runner/ps2dev-win
+      BUILD_ROOT: /home/runner/ps2dev-build-win
+      NATIVE: /home/runner/ps2dev-native
       PS2_CROSS_HOST: x86_64-w64-mingw32
       LLVM_HOST_COMPILER: clang
     steps:
