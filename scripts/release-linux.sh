@@ -1,6 +1,6 @@
 #!/bin/bash
-# Builds ps2-llvm-toolchain-<version>-linux-amd64.zip for a tag in Docker; --publish uploads it to the tag's release.
-# Usage: scripts/release-linux.sh vYYYY.MM.DD [--publish]
+# Builds ps2-llvm-toolchain-<version>-linux-amd64.zip for a tag, in Docker or directly on the host; --publish uploads it to the tag's release.
+# Usage: scripts/release-linux.sh vYYYY.MM.DD [--publish] [--docker|--native]
 set -e
 source "$(dirname "$0")/release-lib.sh"
 release_init "$@"
